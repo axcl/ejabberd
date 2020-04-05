@@ -72,7 +72,7 @@
 -include("ejabberd_stacktrace.hrl").
 
 -define(MAX_USERS_DEFAULT_LIST,
-	[5, 10, 20, 30, 50, 100, 200, 500, 1000, 2000, 5000]).
+	[20]).
 
 -define(DEFAULT_MAX_USERS_PRESENCE,1000).
 
@@ -1226,17 +1226,17 @@ do_process_presence(Nick, #presence{from = From, type = available, lang = Lang} 
 					       From, Nick),
 			  {(StateData#state.config)#config.allow_visitor_nickchange,
 			   is_visitor(From, StateData)}} of
-			{_, _, {false, true}} ->
+			{_, _, {false, _}} ->
 			    Packet1 = Packet#presence{sub_els = [#muc{}]},
-			    ErrText = ?T("Visitors are not allowed to change their "
+			    ErrText = ?T("You are not allowed to change "
 					 "nicknames in this room"),
 			    Err = xmpp:err_not_allowed(ErrText, Lang),
 			    ejabberd_router:route_error(Packet1, Err),
 			    StateData;
 			{true, _, _} ->
 			    Packet1 = Packet#presence{sub_els = [#muc{}]},
-			    ErrText = ?T("That nickname is already in use by another "
-					 "occupant"),
+			    ErrText = ?T("This user is already in  "
+					 "room"),
 			    Err = xmpp:err_conflict(ErrText, Lang),
 			    ejabberd_router:route_error(Packet1, Err),
 			    StateData;
@@ -3516,25 +3516,25 @@ get_config(Lang, StateData, From) ->
 					 MaxUsersRoom
 					 | ?MAX_USERS_DEFAULT_LIST]),
 		       N =< ServiceMaxUsers]},
-	 {whois, if Config#config.anonymous -> moderators;
-		    true -> anyone
-		 end},
-	 {presencebroadcast, Config#config.presence_broadcast},
+	 % {whois, if Config#config.anonymous -> moderators;
+		%     true -> anyone
+		%  end},
+	 % {presencebroadcast, Config#config.presence_broadcast},
 	 {membersonly, Config#config.members_only},
-	 {moderatedroom, Config#config.moderated},
-	 {members_by_default, Config#config.members_by_default},
+	 % {moderatedroom, Config#config.moderated},
+	 % {members_by_default, Config#config.members_by_default},
 	 {changesubject, Config#config.allow_change_subj},
-	 {allow_private_messages, Config#config.allow_private_messages},
-	 {allow_private_messages_from_visitors,
-	  Config#config.allow_private_messages_from_visitors},
-	 {allow_query_users, Config#config.allow_query_users},
-	 {allowinvites, Config#config.allow_user_invites},
-	 {allow_visitor_status, Config#config.allow_visitor_status},
-	 {allow_visitor_nickchange, Config#config.allow_visitor_nickchange},
-	 {allow_voice_requests, Config#config.allow_voice_requests},
-	 {allow_subscription, Config#config.allow_subscription},
-	 {voice_request_min_interval, Config#config.voice_request_min_interval},
-	 {pubsub, Config#config.pubsub}]
+	 % {allow_private_messages, Config#config.allow_private_messages},
+	 % {allow_private_messages_from_visitors,
+	 %  Config#config.allow_private_messages_from_visitors},
+	 % {allow_query_users, Config#config.allow_query_users},
+	 {allowinvites, Config#config.allow_user_invites}]
+	 % {allow_visitor_status, Config#config.allow_visitor_status},
+	 % {allow_visitor_nickchange, Config#config.allow_visitor_nickchange},
+	 % {allow_voice_requests, Config#config.allow_voice_requests},
+	 % {allow_subscription, Config#config.allow_subscription},
+	 % {voice_request_min_interval, Config#config.voice_request_min_interval},
+	 % {pubsub, Config#config.pubsub}]
 	++
 	case ejabberd_captcha:is_feature_available() of
 	    true ->
@@ -3598,30 +3598,30 @@ set_config(Opts, Config, ServerHost, Lang) ->
 	      C#config{allow_private_messages = V};
 	 ({allow_private_messages_from_visitors, V}, C) ->
 	      C#config{allow_private_messages_from_visitors = V};
-	 ({allow_visitor_status, V}, C) -> C#config{allow_visitor_status = V};
-	 ({allow_visitor_nickchange, V}, C) ->
-	      C#config{allow_visitor_nickchange = V};
+	 % ({allow_visitor_status, V}, C) -> C#config{allow_visitor_status = V};
+	 % ({allow_visitor_nickchange, V}, C) ->
+	 %      C#config{allow_visitor_nickchange = V};
 	 ({publicroom, V}, C) -> C#config{public = V};
 	 ({public_list, V}, C) -> C#config{public_list = V};
 	 ({persistentroom, V}, C) -> C#config{persistent = V};
-	 ({moderatedroom, V}, C) -> C#config{moderated = V};
-	 ({members_by_default, V}, C) -> C#config{members_by_default = V};
+	 % ({moderatedroom, V}, C) -> C#config{moderated = V};
+	 % ({members_by_default, V}, C) -> C#config{members_by_default = V};
 	 ({membersonly, V}, C) -> C#config{members_only = V};
 	 ({captcha_protected, V}, C) -> C#config{captcha_protected = V};
 	 ({allowinvites, V}, C) -> C#config{allow_user_invites = V};
-	 ({allow_subscription, V}, C) -> C#config{allow_subscription = V};
+	 % ({allow_subscription, V}, C) -> C#config{allow_subscription = V};
 	 ({passwordprotectedroom, V}, C) -> C#config{password_protected = V};
 	 ({roomsecret, V}, C) -> C#config{password = V};
 	 ({anonymous, V}, C) -> C#config{anonymous = V};
-	 ({presencebroadcast, V}, C) -> C#config{presence_broadcast = V};
-	 ({allow_voice_requests, V}, C) -> C#config{allow_voice_requests = V};
+	 % ({presencebroadcast, V}, C) -> C#config{presence_broadcast = V};
+	 % ({allow_voice_requests, V}, C) -> C#config{allow_voice_requests = V};
 	 ({voice_request_min_interval, V}, C) ->
 	      C#config{voice_request_min_interval = V};
-	 ({whois, moderators}, C) -> C#config{anonymous = true};
-	 ({whois, anyone}, C) -> C#config{anonymous = false};
+	 % ({whois, moderators}, C) -> C#config{anonymous = true};
+	 % ({whois, anyone}, C) -> C#config{anonymous = false};
 	 ({maxusers, V}, C) -> C#config{max_users = V};
-	 ({enablelogging, V}, C) -> C#config{logging = V};
-	 ({pubsub, V}, C) -> C#config{pubsub = V};
+	 % ({enablelogging, V}, C) -> C#config{logging = V};
+	 % ({pubsub, V}, C) -> C#config{pubsub = V};
 	 ({lang, L}, C) -> C#config{lang = L};
 	 ({captcha_whitelist, Js}, C) ->
 	      LJIDs = [jid:tolower(J) || J <- Js],
