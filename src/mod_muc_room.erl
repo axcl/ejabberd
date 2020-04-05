@@ -3501,7 +3501,7 @@ get_config(Lang, StateData, From) ->
 	    deny -> []
 	end ++
 	[{publicroom, Config#config.public},
-	 {public_list, Config#config.public_list},
+	 % {public_list, Config#config.public_list},
 	 {passwordprotectedroom, Config#config.password_protected},
 	 {roomsecret, case Config#config.password_protected of
 			  true -> Config#config.password;
@@ -3521,14 +3521,14 @@ get_config(Lang, StateData, From) ->
 		%  end},
 	 % {presencebroadcast, Config#config.presence_broadcast},
 	 {membersonly, Config#config.members_only},
-	 % {moderatedroom, Config#config.moderated},
+	 {moderatedroom, Config#config.moderated},
 	 % {members_by_default, Config#config.members_by_default},
-	 {changesubject, Config#config.allow_change_subj},
+	 {changesubject, Config#config.allow_change_subj}]
 	 % {allow_private_messages, Config#config.allow_private_messages},
 	 % {allow_private_messages_from_visitors,
 	 %  Config#config.allow_private_messages_from_visitors},
 	 % {allow_query_users, Config#config.allow_query_users},
-	 {allowinvites, Config#config.allow_user_invites}]
+	 % {allowinvites, Config#config.allow_user_invites},
 	 % {allow_visitor_status, Config#config.allow_visitor_status},
 	 % {allow_visitor_nickchange, Config#config.allow_visitor_nickchange},
 	 % {allow_voice_requests, Config#config.allow_voice_requests},
@@ -3593,7 +3593,7 @@ set_config(Opts, Config, ServerHost, Lang) ->
 	 ({roomname, Title}, C) -> C#config{title = Title};
 	 ({roomdesc, Desc}, C) -> C#config{description = Desc};
 	 ({changesubject, V}, C) -> C#config{allow_change_subj = V};
-	 ({allow_query_users, V}, C) -> C#config{allow_query_users = V};
+	 % ({allow_query_users, V}, C) -> C#config{allow_query_users = V};
 	 ({allow_private_messages, V}, C) ->
 	      C#config{allow_private_messages = V};
 	 ({allow_private_messages_from_visitors, V}, C) ->
@@ -3604,28 +3604,28 @@ set_config(Opts, Config, ServerHost, Lang) ->
 	 ({publicroom, V}, C) -> C#config{public = V};
 	 ({public_list, V}, C) -> C#config{public_list = V};
 	 ({persistentroom, V}, C) -> C#config{persistent = V};
-	 % ({moderatedroom, V}, C) -> C#config{moderated = V};
+	 ({moderatedroom, V}, C) -> C#config{moderated = V};
 	 % ({members_by_default, V}, C) -> C#config{members_by_default = V};
 	 ({membersonly, V}, C) -> C#config{members_only = V};
 	 ({captcha_protected, V}, C) -> C#config{captcha_protected = V};
-	 ({allowinvites, V}, C) -> C#config{allow_user_invites = V};
+	 % ({allowinvites, V}, C) -> C#config{allow_user_invites = V};
 	 % ({allow_subscription, V}, C) -> C#config{allow_subscription = V};
 	 ({passwordprotectedroom, V}, C) -> C#config{password_protected = V};
 	 ({roomsecret, V}, C) -> C#config{password = V};
 	 ({anonymous, V}, C) -> C#config{anonymous = V};
 	 % ({presencebroadcast, V}, C) -> C#config{presence_broadcast = V};
 	 % ({allow_voice_requests, V}, C) -> C#config{allow_voice_requests = V};
-	 ({voice_request_min_interval, V}, C) ->
-	      C#config{voice_request_min_interval = V};
+	 % ({voice_request_min_interval, V}, C) ->
+	 %      C#config{voice_request_min_interval = V};
 	 % ({whois, moderators}, C) -> C#config{anonymous = true};
 	 % ({whois, anyone}, C) -> C#config{anonymous = false};
-	 ({maxusers, V}, C) -> C#config{max_users = V};
+	 % ({maxusers, V}, C) -> C#config{max_users = V};
 	 % ({enablelogging, V}, C) -> C#config{logging = V};
 	 % ({pubsub, V}, C) -> C#config{pubsub = V};
-	 ({lang, L}, C) -> C#config{lang = L};
-	 ({captcha_whitelist, Js}, C) ->
-	      LJIDs = [jid:tolower(J) || J <- Js],
-	      C#config{captcha_whitelist = ?SETS:from_list(LJIDs)};
+	 % ({lang, L}, C) -> C#config{lang = L};
+	 % ({captcha_whitelist, Js}, C) ->
+	 %      LJIDs = [jid:tolower(J) || J <- Js],
+	 %      C#config{captcha_whitelist = ?SETS:from_list(LJIDs)};
 	 ({O, V} = Opt, C) ->
 	      case ejabberd_hooks:run_fold(set_room_option,
 					   ServerHost,
