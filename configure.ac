@@ -3,7 +3,7 @@
 
 AC_PREREQ(2.53)
 AC_INIT(ejabberd, m4_esyscmd([echo `git describe --tags 2>/dev/null || echo 0.0` | sed 's/-g.*//;s/-/./' | tr -d '\012']), [ejabberd@process-one.net], [ejabberd])
-REQUIRE_ERLANG_MIN="6.4 (Erlang/OTP 17.5)"
+REQUIRE_ERLANG_MIN="8.3 (Erlang/OTP 19.3)"
 REQUIRE_ERLANG_MAX="100.0.0 (No Max)"
 
 AC_CONFIG_MACRO_DIR([m4])
@@ -109,10 +109,10 @@ AC_ARG_ENABLE(mssql,
 esac],[db_type=generic])
 
 AC_ARG_ENABLE(all,
-[AC_HELP_STRING([--enable-all], [same as --enable-odbc --enable-mysql --enable-pgsql --enable-sqlite --enable-pam --enable-zlib --enable-riak --enable-redis --enable-elixir --enable-iconv --enable-stun --enable-sip --enable-debug --enable-tools (useful for Dialyzer checks, default: no)])],
+[AC_HELP_STRING([--enable-all], [same as --enable-odbc --enable-mysql --enable-pgsql --enable-sqlite --enable-pam --enable-zlib --enable-redis --enable-elixir --enable-stun --enable-sip --enable-debug --enable-tools (useful for Dialyzer checks, default: no)])],
 [case "${enableval}" in
-  yes) odbc=true mysql=true pgsql=true sqlite=true pam=true zlib=true riak=true redis=true elixir=true iconv=true stun=true sip=true debug=true tools=true ;;
-  no) odbc=false mysql=false pgsql=false sqlite=false pam=false zlib=false riak=false redis=false elixir=false iconv=false stun=false sip=false debug=false tools=false ;;
+  yes) odbc=true mysql=true pgsql=true sqlite=true pam=true zlib=true redis=true elixir=true stun=true sip=true debug=true tools=true ;;
+  no) odbc=false mysql=false pgsql=false sqlite=false pam=false zlib=false redis=false elixir=false stun=false sip=false debug=false tools=false ;;
   *) AC_MSG_ERROR(bad value ${enableval} for --enable-all) ;;
 esac],[])
 
@@ -172,14 +172,6 @@ AC_ARG_ENABLE(zlib,
   *) AC_MSG_ERROR(bad value ${enableval} for --enable-zlib) ;;
 esac],[if test "x$zlib" = "x"; then zlib=true; fi])
 
-AC_ARG_ENABLE(riak,
-[AC_HELP_STRING([--enable-riak], [enable Riak support (default: no)])],
-[case "${enableval}" in
-  yes) riak=true ;;
-  no)  riak=false ;;
-  *) AC_MSG_ERROR(bad value ${enableval} for --enable-riak) ;;
-esac],[if test "x$riak" = "x"; then riak=false; fi])
-
 AC_ARG_ENABLE(redis,
 [AC_HELP_STRING([--enable-redis], [enable Redis support (default: no)])],
 [case "${enableval}" in
@@ -195,14 +187,6 @@ AC_ARG_ENABLE(elixir,
   no)  elixir=false ;;
   *) AC_MSG_ERROR(bad value ${enableval} for --enable-elixir) ;;
 esac],[if test "x$elixir" = "x"; then elixir=false; fi])
-
-AC_ARG_ENABLE(iconv,
-[AC_HELP_STRING([--enable-iconv], [enable iconv support (default: yes)])],
-[case "${enableval}" in
-  yes) iconv=true ;;
-  no)  iconv=false ;;
-  *) AC_MSG_ERROR(bad value ${enableval} for --enable-iconv) ;;
-esac],[if test "x$iconv" = "x"; then iconv=true; fi])
 
 AC_ARG_ENABLE(debug,
 [AC_HELP_STRING([--enable-debug], [enable debug information (default: yes)])],
@@ -244,14 +228,6 @@ AC_ARG_ENABLE(sip,
   *) AC_MSG_ERROR(bad value ${enableval} for --enable-sip) ;;
 esac],[if test "x$sip" = "x"; then sip=false; fi])
 
-AC_ARG_ENABLE(graphics,
-[AC_HELP_STRING([--enable-graphics], [enable support for graphic images manipulation (default: yes)])],
-[case "${enableval}" in
-  yes) graphics=true ;;
-  no)  graphics=false ;;
-  *) AC_MSG_ERROR(bad value ${enableval} for --enable-graphics) ;;
-esac],[if test "x$graphics" = "x"; then graphics=true; fi])
-
 AC_CONFIG_FILES([Makefile
 		 vars.config
 		 src/ejabberd.app.src])
@@ -269,8 +245,19 @@ if test "$ENABLEUSER" != ""; then
   echo "allow this system user to start ejabberd: $ENABLEUSER"
   AC_SUBST([INSTALLUSER], [$ENABLEUSER])
 fi
-
-ERLANG_DEPRECATED_TYPES_CHECK
+ENABLEGROUP=""
+AC_ARG_ENABLE(group,
+  [AS_HELP_STRING([--enable-group[[[[=GROUP]]]]], [allow this system group to start ejabberd (default: no)])],
+  [case "${enableval}" in
+     yes) ENABLEGROUP=`groups |head -n 1` ;;
+     no) ENABLEGROUP="" ;;
+     *) ENABLEGROUP=$enableval
+   esac],
+  [])
+if test "$ENABLEGROUP" != ""; then
+  echo "allow this system group to start ejabberd: $ENABLEGROUP"
+  AC_SUBST([INSTALLGROUP], [$ENABLEGROUP])
+fi
 
 if test "$sqlite" = "true"; then
    AX_LIB_SQLITE3([3.6.19])
@@ -278,6 +265,17 @@ if test "$sqlite" = "true"; then
       AC_MSG_ERROR(SQLite3 library >= 3.6.19 was not found)
    fi
 fi
+
+enabled_backends=""
+for backend in odbc mysql pgsql sqlite redis; do
+    if eval test x\${$backend} = xtrue; then
+       if test "x$enabled_backends" = "x"; then
+          enabled_backends=$backend
+       else
+          enabled_backends="$enabled_backends, $backend"
+       fi
+    fi
+done
 
 AC_SUBST(hipe)
 AC_SUBST(roster_gateway_workaround)
@@ -290,19 +288,17 @@ AC_SUBST(pgsql)
 AC_SUBST(sqlite)
 AC_SUBST(pam)
 AC_SUBST(zlib)
-AC_SUBST(riak)
 AC_SUBST(redis)
 AC_SUBST(elixir)
-AC_SUBST(iconv)
 AC_SUBST(stun)
 AC_SUBST(sip)
 AC_SUBST(debug)
-AC_SUBST(graphics)
 AC_SUBST(tools)
 AC_SUBST(latest_deps)
 AC_SUBST(system_deps)
 AC_SUBST(CFLAGS)
 AC_SUBST(CPPFLAGS)
 AC_SUBST(LDFLAGS)
+AC_SUBST(enabled_backends)
 
 AC_OUTPUT
