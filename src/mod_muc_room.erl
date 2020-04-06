@@ -488,6 +488,16 @@ normal_state({route, <<"">>, #iq{} = IQ}, StateData) ->
 	true -> {stop, normal, StateData};
 	_ -> {next_state, normal_state, StateData}
     end;
+normal_state({route, Nick, #presence{from = From, lang = Lang} = Packet}, StateData)
+    when From#jid.luser /= Nick ->
+    ErrText = ?T("It is not allowed to join the room with nickname "
+			 " different than username"),
+    Err = xmpp:err_forbidden(ErrText, Lang),
+    ejabberd_router:route_error(Packet, Err),
+    case StateData#state.just_created of
+    true -> {stop, normal, StateData};
+    false -> {next_state, normal_state, StateData}
+    end;
 normal_state({route, Nick, #presence{from = From} = Packet}, StateData) ->
     Activity = get_user_activity(From, StateData),
     Now = erlang:system_time(microsecond),
@@ -3521,7 +3531,7 @@ get_config(Lang, StateData, From) ->
 		%  end},
 	 % {presencebroadcast, Config#config.presence_broadcast},
 	 {membersonly, Config#config.members_only},
-	 {moderatedroom, Config#config.moderated},
+	 % {moderatedroom, Config#config.moderated},
 	 % {members_by_default, Config#config.members_by_default},
 	 {changesubject, Config#config.allow_change_subj}]
 	 % {allow_private_messages, Config#config.allow_private_messages},
@@ -3604,7 +3614,7 @@ set_config(Opts, Config, ServerHost, Lang) ->
 	 ({publicroom, V}, C) -> C#config{public = V};
 	 ({public_list, V}, C) -> C#config{public_list = V};
 	 ({persistentroom, V}, C) -> C#config{persistent = V};
-	 ({moderatedroom, V}, C) -> C#config{moderated = V};
+	 % ({moderatedroom, V}, C) -> C#config{moderated = V};
 	 % ({members_by_default, V}, C) -> C#config{members_by_default = V};
 	 ({membersonly, V}, C) -> C#config{members_only = V};
 	 ({captcha_protected, V}, C) -> C#config{captcha_protected = V};
